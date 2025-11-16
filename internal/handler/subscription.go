@@ -51,7 +51,7 @@ func (h *SubscriptionHandler) CreateSubscription(c *gin.Context) {
 // @Tags subscriptions
 // @Produce json
 // @Param id path string true "ID подписки"
-// @Success 200 {object} model.Subscription
+// @Success 200 {object} entity.Subscription
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string

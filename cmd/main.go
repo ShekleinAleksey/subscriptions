@@ -7,7 +7,6 @@ import (
 
 	"github.com/ShekleinAleksey/subscriptions/config"
 	"github.com/ShekleinAleksey/subscriptions/internal/handler"
-	"github.com/ShekleinAleksey/subscriptions/internal/migrate"
 	"github.com/ShekleinAleksey/subscriptions/internal/repository"
 	"github.com/ShekleinAleksey/subscriptions/internal/service"
 	"github.com/ShekleinAleksey/subscriptions/pkg/postgres"
@@ -28,19 +27,19 @@ func main() {
 	// Загрузка конфигурации
 	cfg := config.LoadConfig()
 
-	databaseURL := "postgres://admin:root123@localhost:5432/subscriptiondb" //fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
-	// 	cfg.User,
-	// 	cfg.Password,
-	// 	cfg.Host,
-	// 	cfg.Port,
-	// 	cfg.DBName,
-	// 	cfg.SSLMode,
-	// )
+	// databaseURL := "postgres://admin:root123@localhost:5432/subscriptiondb" //fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
+	// // 	cfg.User,
+	// // 	cfg.Password,
+	// // 	cfg.Host,
+	// // 	cfg.Port,
+	// // 	cfg.DBName,
+	// // 	cfg.SSLMode,
+	// // )
 
-	logrus.Info("Running database migrations...")
-	if err := migrate.RunMigrations(databaseURL); err != nil {
-		logrus.Fatalf("Failed to run migrations: %v", err)
-	}
+	// logrus.Info("Running database migrations...")
+	// if err := migrate.RunMigrations(databaseURL); err != nil {
+	// 	logrus.Fatalf("Failed to run migrations: %v", err)
+	// }
 
 	db, err := postgres.NewDB(cfg)
 	if err != nil {

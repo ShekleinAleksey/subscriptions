@@ -1,6 +1,7 @@
 package handler
 
 import (
+	_ "github.com/ShekleinAleksey/subscriptions/docs"
 	"github.com/ShekleinAleksey/subscriptions/internal/service"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
