@@ -8,6 +8,7 @@ import (
 	"github.com/ShekleinAleksey/subscriptions/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type SubscriptionHandler struct {
@@ -184,28 +185,22 @@ func (h *SubscriptionHandler) GetSubscriptionSummary(c *gin.Context) {
 	var req entity.SubscriptionSummaryRequest
 
 	if err := c.ShouldBindQuery(&req); err != nil {
+		logrus.WithError(err).Warn("Failed to bind query parameters")
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if userIDStr := c.Query("user_id"); userIDStr != "" {
-		userID, err := uuid.Parse(userIDStr)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
-			return
-		}
-		req.UserID = &userID
-	}
-
-	if serviceName := c.Query("service_name"); serviceName != "" {
-		req.ServiceName = &serviceName
-	}
-
 	summary, err := h.service.GetSubscriptionSummary(c.Request.Context(), &req)
 	if err != nil {
+		logrus.WithError(err).Error("Failed to get subscription summary")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	logrus.WithFields(logrus.Fields{
+		"total_cost": summary.TotalCost,
+		"count":      summary.Count,
+	}).Info("Subscription summary calculated successfully")
 
 	c.JSON(http.StatusOK, summary)
 }

@@ -1,0 +1,10 @@
+db:
+  user: "admin"
+  host: "localhost"
+  port: "5432"
+  dbname: "subscriptiondb"
+  password: "root123"
+  sslmode: "disable"
+
+log:
+  level: "debug"  # debug, info, warn, error, fatal

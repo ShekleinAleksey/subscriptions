@@ -23,6 +23,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/swaggo/swag v1.8.12 // indirect
+	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
@@ -62,4 +63,5 @@ require (
 	golang.org/x/text v0.27.0 // indirect
 	golang.org/x/tools v0.34.0 // indirect
 	google.golang.org/protobuf v1.36.9 // indirect
+	sigs.k8s.io/yaml v1.6.0
 )

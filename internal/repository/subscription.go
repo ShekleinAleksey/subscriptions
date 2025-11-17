@@ -4,12 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/ShekleinAleksey/subscriptions/internal/entity"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/sirupsen/logrus"
 )
 
 type SubscriptionRepository interface {
@@ -31,8 +31,8 @@ func NewSubscriptionRepository(db *sqlx.DB) SubscriptionRepository {
 
 func (r *subscriptionRepo) Create(ctx context.Context, subscription *entity.Subscription) error {
 	query := `
-        INSERT INTO subscriptions (id, service_name, price, user_id, start_date, end_date, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        INSERT INTO subscriptions (id, service_name, price, user_id, start_date, end_date)
+        VALUES ($1, $2, $3, $4, $5, $6)
     `
 
 	_, err := r.db.ExecContext(ctx, query,
@@ -42,22 +42,20 @@ func (r *subscriptionRepo) Create(ctx context.Context, subscription *entity.Subs
 		subscription.UserID,
 		subscription.StartDate,
 		subscription.EndDate,
-		subscription.CreatedAt,
-		subscription.UpdatedAt,
 	)
 
 	if err != nil {
-		log.Printf("Error creating subscription: %v", err)
+		logrus.Fatalf("Error creating subscription: %v", err)
 		return fmt.Errorf("failed to create subscription: %w", err)
 	}
 
-	log.Printf("Subscription created successfully: %s", subscription.ID)
+	logrus.Info("Subscription created successfully: %s", subscription.ID)
 	return nil
 }
 
 func (r *subscriptionRepo) GetByID(ctx context.Context, id uuid.UUID) (*entity.Subscription, error) {
 	query := `
-        SELECT id, service_name, price, user_id, start_date, end_date, created_at, updated_at
+        SELECT *
         FROM subscriptions WHERE id = $1
     `
 
@@ -69,15 +67,13 @@ func (r *subscriptionRepo) GetByID(ctx context.Context, id uuid.UUID) (*entity.S
 		&subscription.UserID,
 		&subscription.StartDate,
 		&subscription.EndDate,
-		&subscription.CreatedAt,
-		&subscription.UpdatedAt,
 	)
 
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("subscription not found")
 	}
 	if err != nil {
-		log.Printf("Error getting subscription by ID: %v", err)
+		logrus.Fatalf("Error getting subscription by ID: %v", err)
 		return nil, fmt.Errorf("failed to get subscription: %w", err)
 	}
 
@@ -85,12 +81,12 @@ func (r *subscriptionRepo) GetByID(ctx context.Context, id uuid.UUID) (*entity.S
 }
 
 func (r *subscriptionRepo) Update(ctx context.Context, id uuid.UUID, req *entity.UpdateSubscriptionRequest) error {
-	query := "UPDATE subscriptions SET updated_at = $1"
-	params := []interface{}{time.Now()}
-	paramCount := 2
+	query := "UPDATE subscriptions SET"
+	params := []interface{}{}
+	paramCount := 1
 
 	if req.ServiceName != nil {
-		query += fmt.Sprintf(", service_name = $%d", paramCount)
+		query += fmt.Sprintf(" service_name = $%d", paramCount)
 		params = append(params, *req.ServiceName)
 		paramCount++
 	}
@@ -131,7 +127,7 @@ func (r *subscriptionRepo) Update(ctx context.Context, id uuid.UUID, req *entity
 
 	result, err := r.db.ExecContext(ctx, query, params...)
 	if err != nil {
-		log.Printf("Error updating subscription: %v", err)
+		logrus.Fatalf("Error updating subscription: %v", err)
 		return fmt.Errorf("failed to update subscription: %w", err)
 	}
 
@@ -140,7 +136,7 @@ func (r *subscriptionRepo) Update(ctx context.Context, id uuid.UUID, req *entity
 		return fmt.Errorf("subscription not found")
 	}
 
-	log.Printf("Subscription updated successfully: %s", id)
+	logrus.Info("Subscription updated successfully: %s", id)
 	return nil
 }
 
@@ -149,7 +145,7 @@ func (r *subscriptionRepo) Delete(ctx context.Context, id uuid.UUID) error {
 
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
-		log.Printf("Error deleting subscription: %v", err)
+		logrus.Fatalf("Error deleting subscription: %v", err)
 		return fmt.Errorf("failed to delete subscription: %w", err)
 	}
 
@@ -158,21 +154,20 @@ func (r *subscriptionRepo) Delete(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("subscription not found")
 	}
 
-	log.Printf("Subscription deleted successfully: %s", id)
+	logrus.Info("Subscription deleted successfully: %s", id)
 	return nil
 }
 
 func (r *subscriptionRepo) List(ctx context.Context, limit, offset int) ([]*entity.Subscription, error) {
 	query := `
-        SELECT id, service_name, price, user_id, start_date, end_date, created_at, updated_at
+        SELECT *
         FROM subscriptions 
-        ORDER BY created_at DESC 
         LIMIT $1 OFFSET $2
     `
 
 	rows, err := r.db.QueryContext(ctx, query, limit, offset)
 	if err != nil {
-		log.Printf("Error listing subscriptions: %v", err)
+		logrus.Fatalf("Error listing subscriptions: %v", err)
 		return nil, fmt.Errorf("failed to list subscriptions: %w", err)
 	}
 	defer rows.Close()
@@ -187,8 +182,6 @@ func (r *subscriptionRepo) List(ctx context.Context, limit, offset int) ([]*enti
 			&subscription.UserID,
 			&subscription.StartDate,
 			&subscription.EndDate,
-			&subscription.CreatedAt,
-			&subscription.UpdatedAt,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan subscription: %w", err)
@@ -200,34 +193,31 @@ func (r *subscriptionRepo) List(ctx context.Context, limit, offset int) ([]*enti
 		return nil, fmt.Errorf("error iterating subscriptions: %w", err)
 	}
 
-	log.Printf("Listed %d subscriptions", len(subscriptions))
+	logrus.Info("Listed %d subscriptions", len(subscriptions))
 	return subscriptions, nil
 }
 
 func (r *subscriptionRepo) GetSummary(ctx context.Context, req *entity.SubscriptionSummaryRequest) (*entity.SubscriptionSummary, error) {
-	query := `
-        SELECT COALESCE(SUM(price), 0), COUNT(*)
-        FROM subscriptions 
-        WHERE start_date <= $1 AND (end_date IS NULL OR end_date >= $2)
-    `
-
+	query := `SELECT COALESCE(SUM(price), 0), COUNT(*) FROM subscriptions WHERE 1=1`
 	params := []interface{}{}
+	paramCount := 1
 
-	startPeriod, err := time.Parse("01-2006", req.StartPeriod)
-	if err != nil {
-		return nil, fmt.Errorf("invalid start_period format: %w", err)
+	// Если периоды не переданы, используем все время
+	if req.StartPeriod != nil && req.EndPeriod != nil {
+		startPeriod, err := time.Parse("01-2006", *req.StartPeriod)
+		if err != nil {
+			return nil, fmt.Errorf("invalid start_period format: %w", err)
+		}
+
+		endPeriod, err := time.Parse("01-2006", *req.EndPeriod)
+		if err != nil {
+			return nil, fmt.Errorf("invalid end_period format: %w", err)
+		}
+
+		query += fmt.Sprintf(" AND start_date <= $%d AND (end_date IS NULL OR end_date >= $%d)", paramCount, paramCount+1)
+		params = append(params, endPeriod, startPeriod)
+		paramCount += 2
 	}
-
-	endPeriod, err := time.Parse("01-2006", req.EndPeriod)
-	if err != nil {
-		return nil, fmt.Errorf("invalid end_period format: %w", err)
-	}
-
-	// Adjust end period to end of month
-	endPeriod = time.Date(endPeriod.Year(), endPeriod.Month()+1, 0, 0, 0, 0, 0, time.UTC)
-
-	params = append(params, endPeriod, startPeriod)
-	paramCount := 3
 
 	if req.UserID != nil {
 		query += fmt.Sprintf(" AND user_id = $%d", paramCount)
@@ -242,12 +232,11 @@ func (r *subscriptionRepo) GetSummary(ctx context.Context, req *entity.Subscript
 	}
 
 	var summary entity.SubscriptionSummary
-	err = r.db.QueryRowContext(ctx, query, params...).Scan(&summary.TotalCost, &summary.Count)
+	err := r.db.QueryRowContext(ctx, query, params...).Scan(&summary.TotalCost, &summary.Count)
 	if err != nil {
-		log.Printf("Error getting subscription summary: %v", err)
+		logrus.WithError(err).Error("failed to get subscription summary")
 		return nil, fmt.Errorf("failed to get subscription summary: %w", err)
 	}
 
-	log.Printf("Subscription summary calculated: total cost %d, count %d", summary.TotalCost, summary.Count)
 	return &summary, nil
 }

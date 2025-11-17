@@ -13,8 +13,6 @@ type Subscription struct {
 	UserID      uuid.UUID  `json:"user_id" db:"user_id"`
 	StartDate   time.Time  `json:"start_date" db:"start_date"`
 	EndDate     *time.Time `json:"end_date,omitempty" db:"end_date"`
-	CreatedAt   time.Time  `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
 }
 
 type CreateSubscriptionRequest struct {
@@ -35,8 +33,8 @@ type UpdateSubscriptionRequest struct {
 type SubscriptionSummaryRequest struct {
 	UserID      *uuid.UUID `form:"user_id"`
 	ServiceName *string    `form:"service_name"`
-	StartPeriod string     `form:"start_period" binding:"required"`
-	EndPeriod   string     `form:"end_period" binding:"required"`
+	StartPeriod *string    `form:"start_period"`
+	EndPeriod   *string    `form:"end_period"`
 }
 
 type SubscriptionSummary struct {

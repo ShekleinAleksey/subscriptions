@@ -391,9 +391,6 @@ const docTemplate = `{
         "entity.Subscription": {
             "type": "object",
             "properties": {
-                "created_at": {
-                    "type": "string"
-                },
                 "end_date": {
                     "type": "string"
                 },
@@ -407,9 +404,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "start_date": {
-                    "type": "string"
-                },
-                "updated_at": {
                     "type": "string"
                 },
                 "user_id": {
@@ -458,8 +452,6 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "REST API для управления онлайн-подписками",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
-	// LeftDelim:        "{{",
-	// RightDelim:       "}}",
 }
 
 func init() {

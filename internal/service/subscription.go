@@ -8,6 +8,7 @@ import (
 	"github.com/ShekleinAleksey/subscriptions/internal/entity"
 	"github.com/ShekleinAleksey/subscriptions/internal/repository"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type SubscriptionService interface {
@@ -49,8 +50,6 @@ func (s *subscriptionService) CreateSubscription(ctx context.Context, req *entit
 		UserID:      req.UserID,
 		StartDate:   startDate,
 		EndDate:     endDate,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
 	}
 
 	if err := s.repo.Create(ctx, subscription); err != nil {
@@ -84,5 +83,24 @@ func (s *subscriptionService) ListSubscriptions(ctx context.Context, limit, offs
 }
 
 func (s *subscriptionService) GetSubscriptionSummary(ctx context.Context, req *entity.SubscriptionSummaryRequest) (*entity.SubscriptionSummary, error) {
+	logrus.WithFields(logrus.Fields{
+		"user_id":      req.UserID,
+		"service_name": req.ServiceName,
+		"start_period": req.StartPeriod,
+		"end_period":   req.EndPeriod,
+	}).Debug("Calculating subscription summary")
+
+	// Валидация периодов если они переданы
+	if req.StartPeriod != nil {
+		if _, err := time.Parse("01-2006", *req.StartPeriod); err != nil {
+			return nil, fmt.Errorf("invalid start_period format: %w", err)
+		}
+	}
+	if req.EndPeriod != nil {
+		if _, err := time.Parse("01-2006", *req.EndPeriod); err != nil {
+			return nil, fmt.Errorf("invalid end_period format: %w", err)
+		}
+	}
+
 	return s.repo.GetSummary(ctx, req)
 }

@@ -10,7 +10,7 @@ import (
 
 func NewDB(cfg config.Config) (*sqlx.DB, error) {
 	db, err := sqlx.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
-		cfg.Host, cfg.Port, cfg.User, cfg.DBName, cfg.Password, cfg.SSLMode))
+		cfg.DB.Host, cfg.DB.Port, cfg.DB.User, cfg.DB.DBName, cfg.DB.Password, cfg.DB.SSLMode))
 	if err != nil {
 		return nil, err
 	}
