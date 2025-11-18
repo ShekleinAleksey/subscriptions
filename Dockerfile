@@ -1,6 +1,6 @@
 
 # Этап 1: Сборка приложения
-FROM golang:alpine as builder
+FROM golang:alpine AS builder
 
 # Устанавливаем зависимости для сборки
 RUN apk add --no-cache git
