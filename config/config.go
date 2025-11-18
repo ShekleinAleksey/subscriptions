@@ -18,7 +18,7 @@ type Log struct {
 }
 
 type DB struct {
-	User     string `yaml:"user" env:"DB_USER"`
+	User     string `yaml:"user" env:"DB_USERNAME"`
 	Host     string `yaml:"host" env:"DB_HOST"`
 	Port     string `yaml:"port" env:"DB_PORT"`
 	DBName   string `yaml:"dbname" env:"DB_NAME"`
